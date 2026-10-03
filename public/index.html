@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRADES.LOCAL</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #fdfaf6; color: #2d3748; margin: 0; padding: 20px; line-height: 1.6; }
+        .container { max-width: 650px; margin: 0 auto; }
+        h1 { font-size: 2.2rem; margin: 0; color: #2b6cb0; font-weight: 800; letter-spacing: -0.5px; }
+        header { border-bottom: 2px solid #edf2f7; padding-bottom: 15px; margin-bottom: 25px; }
+        .header-meta { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.95rem; color: #718096; flex-wrap: wrap; gap: 10px;}
+        #reputation-display { background: #e6fffa; color: #234e52; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; }
+
+        input, select, textarea { width: 100%; font-family: inherit; font-size: 1rem; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; margin-bottom: 15px; transition: all 0.2s; resize: vertical; }
+        input:focus, textarea:focus { outline: none; border-color: #319795; box-shadow: 0 0 0 3px rgba(49, 151, 149, 0.1); }
+        
+        button { font-family: inherit; font-size: 1rem; font-weight: 600; padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s ease; }
+        button.primary { background: #319795; color: #fff; }
+        button.primary:hover { background: #285e61; transform: translateY(-1px); }
+        button:not(.primary) { background: #edf2f7; color: #4a5568; margin-left: 10px; }
+        button:not(.primary):hover { background: #e2e8f0; }
+
+        .listing-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); padding: 24px; margin-bottom: 20px; transition: transform 0.2s; }
+        .listing-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px rgba(0,0,0,0.03); }
+        .listing-img { width: 100%; max-height: 250px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; }
+        .listing-title { font-size: 1.3rem; font-weight: 700; color: #2d3748; margin-bottom: 6px; }
+        .listing-desc { color: #4a5568; margin-bottom: 15px; font-size: 0.95rem; white-space: pre-wrap; background: #f7fafc; padding: 12px; border-radius: 6px; border-left: 3px solid #e2e8f0; }
+        .listing-wants { color: #718096; margin-bottom: 20px; font-size: 0.95rem; }
+
+        #post-form, #chat-view { display: none; background: #fff; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 30px; margin-bottom: 30px; }
+        #chat-box { height: 350px; border: 1px solid #e2e8f0; border-radius: 8px; overflow-y: scroll; margin-bottom: 15px; padding: 15px; background: #f7fafc; white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6; }
+        .handshake-btn { background: #dd6b20 !important; color: white !important; width: 100%; margin: 15px 0 0 0 !important; }
+        .handshake-btn:hover { background: #c05621 !important; }
+    </style>
+</head>
+<body>
+    <div id="location-gateway" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(253, 250, 246, 0.95); z-index: 100; align-items: center; justify-content: center;">
+        <div style="background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; border: 1px solid #e2e8f0;">
+            <h2 style="margin-top: 0; color: #2b6cb0;">Choose Your Hub</h2>
+            <p style="color: #718096; margin-bottom: 20px;">We don't track your GPS. Select your local area to see neighborhood trades.</p>
+            <select id="city-selector" style="margin-bottom: 20px;">
+                <optgroup label="South Australia">
+                    <option value="Adelaide CBD, SA">Adelaide CBD, SA</option>
+                    <option value="Adelaide Area, SA">Adelaide Area, SA</option>
+                    <option value="Riverland, SA">Riverland, SA</option>
+                    <option value="Mount Gambier, SA">Mount Gambier, SA</option>
+                </optgroup>
+                <optgroup label="Victoria">
+                    <option value="Melbourne CBD, VIC">Melbourne CBD, VIC</option>
+                    <option value="Geelong, VIC">Geelong, VIC</option>
+                    <option value="Ballarat, VIC">Ballarat, VIC</option>
+                    <option value="Bendigo, VIC">Bendigo, VIC</option>
+                </optgroup>
+                <optgroup label="New South Wales">
+                    <option value="Sydney CBD, NSW">Sydney CBD, NSW</option>
+                    <option value="Parramatta, NSW">Parramatta, NSW</option>
+                    <option value="Newcastle, NSW">Newcastle, NSW</option>
+                    <option value="Wollongong, NSW">Wollongong, NSW</option>
+                </optgroup>
+                <optgroup label="Queensland">
+                    <option value="Brisbane CBD, QLD">Brisbane CBD, QLD</option>
+                    <option value="Gold Coast, QLD">Gold Coast, QLD</option>
+                    <option value="Sunshine Coast, QLD">Sunshine Coast, QLD</option>
+                    <option value="Cairns, QLD">Cairns, QLD</option>
+                </optgroup>
+                <optgroup label="Western Australia">
+                    <option value="Perth CBD, WA">Perth CBD, WA</option>
+                    <option value="Fremantle, WA">Fremantle, WA</option>
+                </optgroup>
+                <optgroup label="Other Territories">
+                    <option value="Hobart, TAS">Hobart, TAS</option>
+                    <option value="Darwin, NT">Darwin, NT</option>
+                    <option value="Canberra, ACT">Canberra, ACT</option>
+                </optgroup>
+            </select>
+            <button class="primary" style="width: 100%;" onclick="saveLocation()">Enter Board</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="notification-banner" style="display: none; background: #c6f6d5; border: 1px solid #38a169; border-radius: 8px; padding: 15px; margin-bottom: 20px; color: #22543d; font-weight: bold; align-items: center; justify-content: space-between;">
+            <span>🔔 Someone accepted your trade!</span>
+            <button class="primary" id="join-claimed-room-btn" style="background: #2f855a; margin: 0; padding: 8px 15px; font-size: 0.9rem;">Enter Secure Room</button>
+        </div>
+
+        <header>
+            <h1>TRADES.LOCAL</h1>
+            <div class="header-meta">
+                <span id="current-location-display" style="cursor: pointer; text-decoration: underline;" onclick="openLocationGateway()">[ SELECT LOCATION ]</span>
+                <a href="/about.html" style="color: #718096; text-decoration: none;">[ MANIFESTO & SAFETY ]</a>
+                <span id="reputation-display">Device: 0 Trades</span>
+            </div>
+        </header>
+
+        <div id="board-view">
+            <div style="margin: 20px 0 30px 0;">
+                <button class="primary" onclick="document.getElementById('post-form').style.display='block'">+ Post a Listing</button>
+            </div>
+
+            <div id="post-form">
+                <h3 style="margin-top: 0; color: #2b6cb0;">NEW LISTING</h3>
+                <label style="font-weight: 600; font-size: 0.9rem;">I Have (Item, Skill, or leave blank to offer anything):</label>
+                <input type="text" id="post-title" placeholder="e.g., Vintage Record Player">
+                
+                <label style="font-weight: 600; font-size: 0.9rem;">Upload Image (Optional):</label>
+                <input type="file" id="post-image" accept="image/*">
+
+                <label style="font-weight: 600; font-size: 0.9rem;">Details (Condition, specs, max 500 chars):</label>
+                <textarea id="post-desc" maxlength="500" rows="3" placeholder="e.g., Needs a new needle, motor runs great..."></textarea>
+
+                <label style="font-weight: 600; font-size: 0.9rem;">I Need (Leave blank for 'Surprise Me'):</label>
+                <input type="text" id="post-wants" placeholder="e.g., Tattoo session">
+                
+                <button class="primary" onclick="submitListing()">Post to Board</button>
+                <button onclick="document.getElementById('post-form').style.display='none'">Cancel</button>
+            </div>
+
+            <div id="listings-container">Loading listings...</div>
+        </div>
+
+        <div id="chat-view">
+            <h3 style="margin-top: 0; color: #2b6cb0;">SECURE ROOM</h3>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: bold; color: #718096; font-size: 0.9rem; background: #edf2f7; padding: 10px; border-radius: 8px;">
+                <span>Your Device: <span id="chat-my-rep" style="color: #2b6cb0;">0</span> Trades</span>
+                <span>Peer Device: <span id="chat-peer-rep" style="color: #dd6b20;">Waiting for peer...</span></span>
+            </div>
+            <div id="chat-box"></div>
+            <div style="display: flex;">
+                <input type="text" id="chat-input" placeholder="Type message..." style="margin-bottom:0; flex-grow:1;">
+                <button class="primary" onclick="sendMessage()" style="margin-left: 10px;">Send</button>
+            </div>
+            <button class="handshake-btn" onclick="completeTrade()">[ IN-PERSON HANDSHAKE: COMPLETE TRADE ]</button>
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        let localReputation = parseInt(localStorage.getItem('trade_count')) || 0;
+        let userLocation = localStorage.getItem('trade_location');
+        let myReceipts = JSON.parse(localStorage.getItem('my_receipts')) || [];
+        
+        let deviceId = localStorage.getItem('trade_device_id');
+        if (!deviceId) {
+            deviceId = Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('trade_device_id', deviceId);
+        }
+
+        document.getElementById('reputation-display').innerText = `Device: ${localReputation} Trades`;
+        if (!userLocation) openLocationGateway();
+        else document.getElementById('current-location-display').innerText = `[ ${userLocation.toUpperCase()} ]`;
+
+        function openLocationGateway() { document.getElementById('location-gateway').style.display = 'flex'; }
+        function saveLocation() {
+            userLocation = document.getElementById('city-selector').value;
+            localStorage.setItem('trade_location', userLocation);
+            document.getElementById('location-gateway').style.display = 'none';
+            document.getElementById('current-location-display').innerText = `[ ${userLocation.toUpperCase()} ]`;
+            loadListings();
+        }
+
+        function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const scaleSize = 600 / img.width;
+                        canvas.width = 600; canvas.height = img.height * scaleSize;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/webp', 0.7)); 
+                    };
+                };
+            });
+        }
+
+        async function loadListings() {
+            if (!userLocation) return;
+            try {
+                const res = await fetch(`/api/listings?location=${encodeURIComponent(userLocation)}`);
+                const data = await res.json();
+                const container = document.getElementById('listings-container');
+                
+                if (data.length === 0) {
+                    container.innerHTML = "<div style='text-align:center; padding:40px; color:#a0aec0;'>No active listings in this hub. Be the first.</div>";
+                    return;
+                }
+
+                container.innerHTML = data.map(l => `
+                    <div class="listing-card">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                            <div style="font-size: 0.85rem; color: #319795; font-weight: 700; text-transform: uppercase;">👤 Poster has ${l.reputation} completed trades</div>
+                            <button onclick="flagListing('${l.id}')" style="background: transparent; color: #e53e3e; border: 1px solid #e53e3e; padding: 4px 8px; font-size: 0.8rem; margin: 0; box-shadow: none;">🚩 Flag</button>
+                        </div>
+                        ${l.image ? `<img src="${l.image}" class="listing-img">` : ''}
+                        <div class="listing-title">[HAVE] ${l.title}</div>
+                        ${l.description ? `<div class="listing-desc">${l.description}</div>` : ''}
+                        <div class="listing-wants">[SEEKING] ${l.wants}</div>
+                        <button class="primary" onclick="acceptOffer('${l.id}')">Accept & Open Chat</button>
+                    </div>
+                `).join('');
+            } catch (err) { console.error("Error loading listings", err); }
+        }
+
+        async function submitListing() {
+            if (localReputation === 0 && myReceipts.length >= 3) {
+                alert("Anti-Spam: Unverified devices (0 Trades) can only hold 3 active listings at a time. Complete a trade to unlock unlimited posting.");
+                return;
+            }
+            try {
+                let title = document.getElementById('post-title').value;
+                let description = document.getElementById('post-desc').value;
+                let wants = document.getElementById('post-wants').value;
+                const fileInput = document.getElementById('post-image');
+                
+                if (!title.trim()) title = "Anything (Open to offers)";
+                if (!wants.trim()) wants = "Anything, surprise me";
+
+                let imageBase64 = null;
+                if (fileInput.files.length > 0) imageBase64 = await compressImage(fileInput.files[0]);
+
+                const res = await fetch('/api/listings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, description, wants, type: 'Goods', image: imageBase64, location: userLocation, reputation: localReputation })
+                });
+
+                const newListing = await res.json();
+                myReceipts.push(newListing.id);
+                localStorage.setItem('my_receipts', JSON.stringify(myReceipts));
+
+                document.getElementById('post-form').style.display = 'none';
+                document.getElementById('post-title').value = '';
+                document.getElementById('post-desc').value = '';
+                document.getElementById('post-wants').value = '';
+                document.getElementById('post-image').value = '';
+                loadListings();
+            } catch (err) { console.error("Error posting listing", err); }
+        }
+
+        async function acceptOffer(listingId) {
+            try {
+                const res = await fetch('/api/accept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ listingId }) });
+                const data = await res.json();
+                joinChat(data.roomId);
+            } catch (err) { console.error("Error accepting offer", err); }
+        }
+
+        async function flagListing(listingId) {
+            if (!confirm("Flag this post for removal? 3 community votes will delete it permanently.")) return;
+            try {
+                const res = await fetch('/api/flag', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ listingId, deviceId })
+                });
+                const data = await res.json();
+                if (data.removed) alert("Post removed by community vote.");
+                else alert(`Vote registered. ${3 - data.votes} more needed to remove this post.`);
+                loadListings();
+            } catch (err) { console.error("Error flagging post", err); }
+        }
+
+        function joinChat(roomId) {
+            document.getElementById('board-view').style.display = 'none';
+            document.getElementById('chat-view').style.display = 'block';
+            document.getElementById('chat-my-rep').innerText = localReputation;
+            document.getElementById('chat-peer-rep').innerText = "Waiting for peer...";
+            document.getElementById('chat-peer-rep').dataset.echoed = "false";
+            
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/room/${roomId}`);
+            
+            ws.onopen = () => ws.send(JSON.stringify({ type: 'handshake', rep: localReputation }));
+            ws.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === 'handshake') {
+                        document.getElementById('chat-peer-rep').innerText = `${msg.rep} Trades`;
+                        if (document.getElementById('chat-peer-rep').dataset.echoed === "false") {
+                            ws.send(JSON.stringify({ type: 'handshake', rep: localReputation }));
+                            document.getElementById('chat-peer-rep').dataset.echoed = "true";
+                        }
+                    } else if (msg.type === 'chat') {
+                        const chatBox = document.getElementById('chat-box');
+                        chatBox.innerHTML += `\n> Peer: ${msg.text}`;
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    }
+                } catch (err) {}
+            };
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            if (input.value && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'chat', text: input.value }));
+                const chatBox = document.getElementById('chat-box');
+                chatBox.innerHTML += `\n> You: ${input.value}`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+                input.value = '';
+            }
+        }
+
+        async function checkMyReceipts() {
+            if (myReceipts.length === 0) return;
+            try {
+                const res = await fetch('/api/check-receipts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ myListingIds: myReceipts }) });
+                const notifications = await res.json();
+                if (notifications.length > 0) {
+                    const match = notifications[0]; 
+                    const banner = document.getElementById('notification-banner');
+                    banner.style.display = 'flex';
+                    document.getElementById('join-claimed-room-btn').onclick = () => {
+                        joinChat(match.roomId);
+                        banner.style.display = 'none';
+                        myReceipts = myReceipts.filter(id => id !== match.listingId);
+                        localStorage.setItem('my_receipts', JSON.stringify(myReceipts));
+                    };
+                }
+            } catch (err) {}
+        }
+
+        function completeTrade() {
+            localReputation += 1;
+            localStorage.setItem('trade_count', localReputation);
+            alert('Trade verified. Your device punch-card has been updated.');
+            window.location.reload(); 
+        }
+
+        loadListings();
+        checkMyReceipts();
+        setInterval(checkMyReceipts, 10000); 
+    </script>
+</body>
+</html>
